@@ -7,7 +7,7 @@
 
 arduino IDE 설치 후
 
-$ sudo apt-get install ros-kinetic-rosserial-arduino
+$ sudo apt-get install ros-kinetic-rosserial-arduino  
 $ sudo apt-get install ros-kinetic-rosserial
 
   
