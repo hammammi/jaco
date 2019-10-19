@@ -1,0 +1,7 @@
+<launch>
+<!-- if you want to change param "roslaunch my_file.launch arg:=value" -->
+	<node name="serial_node"	pkg="rosserial_python"	type="serial_node.py">
+		<param name="port"	type="string"	value="/dev/ttyUSB0"/>
+		<param name="baud"	type="int"	value="57600"/>
+	</node>
+</launch>
