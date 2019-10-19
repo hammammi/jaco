@@ -1,6 +1,6 @@
 # jaco
 
-sudo chmod a+rw /dev/ttyACM0
+
 
 
 --> 여기서 ROS 버전은 본인의 버전과 맞는 것을 사용하도록 한다.
@@ -16,5 +16,17 @@ $ rosrun rosserial_arduino make_libraries.py
   
 arduino tutorial을 따라해보기바람...
 
+AD7705 폴더를 arduino libraries 폴더에 넣는다.
+(AD770x 라이브러리를 조금 바꾼것이므로 그것을 사용해도 됨. 그러나 올려진 스케치를 그대로 사용하려면 AD7705 권장)
+
+readP 를 arduino MEGA에 업로드한다.
+
+어떤 포트에 연결되었는지 확인 필수.
+
 jaco_msgs package를 ROS workspace folder의 src에 넣고 catkin_make
 
+$ rosrun rosserial_client make_library.py ~/<arduino IDE path>/libraries jaco_msgs
+
+
+
+sudo chmod a+rw /dev/ttyUSB0
