@@ -12,7 +12,7 @@ $ sudo apt-get install ros-kinetic-rosserial
 
 $ cd <arduino IDE path>/libraries   --> arduino 폴더 설치된 곳의 libraries 폴더 안을 말함.
 ($ rm -rf ros_lib   --> 기존에 ros_lib이 설치되어 있었던 경우만)
-$ rosrun rosserial_arduino make_libraries.py
+$ rosrun rosserial_arduino make_libraries.py .
   
 arduino tutorial을 따라해보기바람...
 
