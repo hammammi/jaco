@@ -10,14 +10,15 @@ AD7705::AD7705(int ssPin, double vref) {
     pinMode(pinSS, OUTPUT);
 
     digitalWrite(pinSS, HIGH);
+
     SPCR = _BV(SPE) | _BV(MSTR) | _BV(CPOL) | _BV(CPHA) | _BV(SPI2X) | _BV(SPR1) | _BV(SPR0);
 }
 
 void AD7705::init(byte channel, byte clkDivider, byte polarity, byte gain, byte updRate) {
-    setNextOperation(REG_CLOCK, channel, Write);
+    setNextOperation(REG_CLOCK, channel, 0);
     writeClockRegister(0, clkDivider, updRate);
 
-    setNextOperation(REG_SETUP, channel, Write);
+    setNextOperation(REG_SETUP, channel, 0);
     writeSetupRegister(MODE_SELF_CAL, gain, polarity, 0, 0);
 
     while (!dataReady(channel)) {
@@ -80,7 +81,7 @@ void AD7705::writeSetupRegister(byte operationMode, byte gain, byte polarity, by
 
 
 bool AD7705::dataReady(byte channel) {
-    setNextOperation(REG_CMM, channel, Read);
+    setNextOperation(REG_CMM, channel, 1);
 
     digitalWrite(pinSS, LOW);
     byte b1 = SPI.transfer(0x0);
@@ -95,16 +96,20 @@ unsigned int AD7705::readADResult() {
     byte b1 = SPI.transfer(0x0);
     byte b2 = SPI.transfer(0x0);
     digitalWrite(pinSS, HIGH);
-
+    
     unsigned int r = b1 << 8 | b2;
 
     return r;
 }
 
 double AD7705::readValue(byte channel, float refOffset) {
+    init(channel) ;
+    
+
     while (!dataReady(channel)) {
     };
     setNextOperation(REG_DATA, channel, 1);
+
 
     return readADResult() * 1.0 / 65536.0 * VRef - refOffset;
 }
