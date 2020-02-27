@@ -81,9 +81,9 @@ DXL_MINIMUM_POSITION_VALUE  = 10           # Dynamixel will rotate between this 
 DXL_MAXIMUM_POSITION_VALUE  = 4000            # and this value (note that the Dynamixel would not move when the position value is out of movable range. Check e-manual about the range of the Dynamixel you use.)
 DXL_MOVING_STATUS_THRESHOLD = 20                # Dynamixel moving status threshold
 
-index = 0
 dxl_home_position = [1024, 2048, 0, 2560, 4095, 0]         # Home position
 dxl_present_position = [0,0,0,0,0,0]
+
 
 
 # Initialize PortHandler instance
@@ -132,26 +132,6 @@ for i in DXL_ID:
     elif dxl_error != 0:
         print("%s" % packetHandler.getRxPacketError(dxl_error))
 
-    # dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID[i], ADDR_MX_MOVING_SPEED, 30)
-    # if dxl_comm_result != COMM_SUCCESS:
-    #     print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    # elif dxl_error != 0:
-    #     print("%s" % packetHandler.getRxPacketError(dxl_error))
-    #
-    # dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID[i], ADDR_MX_GOAL_POSITION, dxl_home_position[i])
-    # if dxl_comm_result != COMM_SUCCESS:
-    #     print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    # elif dxl_error != 0:
-    #     print("%s" % packetHandler.getRxPacketError(dxl_error))
-
-
-
-
-    # dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID[i], ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
-    # if dxl_comm_result != COMM_SUCCESS:
-    #     print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    # elif dxl_error != 0:
-    #     print("%s" % packetHandler.getRxPacketError(dxl_error))
     else:
         print("Dynamixel %03d has been successfully connected" % i )
 
@@ -161,75 +141,33 @@ for i in DXL_ID:
 
 def callback(msg):
     # rospy.loginfo(msg)
-
+    global jn
     jn = msg.data
 
-    dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,jn, ADDR_MX_TCME,TORQUE_ENABLE)
-    if dxl_comm_result != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    elif dxl_error != 0:
-        print("%s" % packetHandler.getRxPacketError(dxl_error))
-    dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,jn, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
-    if dxl_comm_result != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    elif dxl_error != 0:
-        print("%s" % packetHandler.getRxPacketError(dxl_error))
-    dxl_torque_mode, dxl_comm_result, dxl_error = packetHandler.read1ByteTxRx(portHandler, jn, ADDR_MX_TCME)
 
-    if dxl_comm_result != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    elif dxl_error != 0:
-        print("%s" % packetHandler.getRxPacketError(dxl_error))
-
-    print("[ID:%03d] Mode %03d" % (jn, dxl_torque_mode))
-
-    time.sleep(5)
-
-    # Write torque mode on
-
-    dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,jn, ADDR_MX_TCME, TORQUE_DISABLE)
-    if dxl_comm_result != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    elif dxl_error != 0:
-        print("%s" % packetHandler.getRxPacketError(dxl_error))
-
-    dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,jn, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
-    if dxl_comm_result != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    elif dxl_error != 0:
-        print("%s" % packetHandler.getRxPacketError(dxl_error))
-
-    for i in DXL_ID:
-        dxl_present_position[i], dxl_comm_result, dxl_error = packetHandler.read2ByteTxRx(portHandler, DXL_ID[i], ADDR_MX_PRESENT_POSITION)
-        dxl_present_position[i] = dxl_present_position[i] - dxl_home_position[i]
-        if dxl_comm_result != COMM_SUCCESS:
-            print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-        elif dxl_error != 0:
-            print("%s" % packetHandler.getRxPacketError(dxl_error))
-        # dxl_torque_mode, dxl_comm_result, dxl_error = packetHandler.read1ByteTxRx(portHandler, DXL_ID[i-2], ADDR_MX_TCME)
-        # if dxl_comm_result != COMM_SUCCESS:
-        #     print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-        # elif dxl_error != 0:
-        #     print("%s" % packetHandler.getRxPacketError(dxl_error))
-        #
-        # print("[ID:%03d] Mode %03d" % (DXL_ID[i-2], dxl_torque_mode))
 
 def readposition():
+    global jn
+    jn = 10
+    count = 0
+
+
     rospy.init_node('get_joint_angle')
     pub = rospy.Publisher('joint_angle',angle,queue_size=10)
     rospy.Subscriber('command',Int8,callback)
-    rate = rospy.Rate(1000)
-    for i in DXL_ID:
-        dxl_present_position[i], dxl_comm_result, dxl_error = packetHandler.read2ByteTxRx(portHandler, DXL_ID[i], ADDR_MX_PRESENT_POSITION)
-        dxl_present_position[i] = dxl_present_position[i] - dxl_home_position[i]
-        if dxl_comm_result != COMM_SUCCESS:
-            print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-        elif dxl_error != 0:
-            print("%s" % packetHandler.getRxPacketError(dxl_error))
+    r = 1  # Hz
+    rate = rospy.Rate(r)
+
 
     while not rospy.is_shutdown():
         # Read present position
-
+        for i in DXL_ID:
+            dxl_present_position[i], dxl_comm_result, dxl_error = packetHandler.read2ByteTxRx(portHandler, DXL_ID[i], ADDR_MX_PRESENT_POSITION)
+            dxl_present_position[i] = dxl_present_position[i] - dxl_home_position[i]
+            if dxl_comm_result != COMM_SUCCESS:
+                print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+            elif dxl_error != 0:
+                print("%s" % packetHandler.getRxPacketError(dxl_error))
 
         # print("[Present position] joint#0 %03d joint#1 %03d joint#2 %03d joint#3 %03d joint#4 %03d joint#5 %03d " % (dxl_present_position[0], dxl_present_position[1], dxl_present_position[2], dxl_present_position[3], dxl_present_position[4],dxl_present_position[5]))
         joints = angle()
@@ -240,13 +178,92 @@ def readposition():
         joints.joint4 = dxl_present_position[4] * 0.088
         joints.joint5 = dxl_present_position[5] * 0.088
         # rospy.loginfo("[Present position] joint#0 %03d joint#1 %03d joint#2 %03d joint#3 %03d joint#4 %03d joint#5 %03d " % (dxl_present_position[0], dxl_present_position[1], dxl_present_position[2], dxl_present_position[3], dxl_present_position[4],dxl_present_position[5]))
-
-        rospy.loginfo("[Present position] joint#0 %03d joint#1 %03d joint#2 %03d joint#3 %03d joint#4 %03d joint#5 %03d " % (joints.joint0, joints.joint1, joints.joint2, joints.joint3, joints.joint4, joints.joint5))
-
-
         pub.publish(joints)
+        rospy.loginfo("[Present position] joint#0 %03d joint#1 %03d joint#2 %03d joint#3 %03d joint#4 %03d joint#5 %03d " % (joints.joint0, joints.joint1, joints.joint2, joints.joint3, joints.joint4, joints.joint5))
+        rospy.loginfo("%d %d"%(jn, count))
+        if jn != 10 and jn != 6:
+            if count == 0 :
+                dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,jn, ADDR_MX_TCME,TORQUE_ENABLE)
+                if dxl_comm_result != COMM_SUCCESS:
+                    print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+                elif dxl_error != 0:
+                    print("%s" % packetHandler.getRxPacketError(dxl_error))
+                dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,jn, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+                if dxl_comm_result != COMM_SUCCESS:
+                    print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+                elif dxl_error != 0:
+                    print("%s" % packetHandler.getRxPacketError(dxl_error))
+                dxl_torque_mode, dxl_comm_result, dxl_error = packetHandler.read1ByteTxRx(portHandler, jn, ADDR_MX_TCME)
+
+                if dxl_comm_result != COMM_SUCCESS:
+                    print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+                elif dxl_error != 0:
+                    print("%s" % packetHandler.getRxPacketError(dxl_error))
+                count = count + 1
+                print("[ID:%03d] Mode %03d" % (jn, dxl_torque_mode))
+
+
+            elif count/r == 5.0:
+                dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,jn, ADDR_MX_TCME, TORQUE_DISABLE)
+                if dxl_comm_result != COMM_SUCCESS:
+                    print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+                elif dxl_error != 0:
+                    print("%s" % packetHandler.getRxPacketError(dxl_error))
+
+                dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,jn, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+                if dxl_comm_result != COMM_SUCCESS:
+                    print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+                elif dxl_error != 0:
+                    print("%s" % packetHandler.getRxPacketError(dxl_error))
+                jn = 10
+                count = 0
+            else:
+                count = count + 1
+
+        elif jn == 6 :
+            if count == 0 :
+                for i in DXL_ID:
+                    dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,DXL_ID[i], ADDR_MX_TCME,TORQUE_ENABLE)
+                    if dxl_comm_result != COMM_SUCCESS:
+                        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+                    elif dxl_error != 0:
+                        print("%s" % packetHandler.getRxPacketError(dxl_error))
+                    dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,DXL_ID[i], ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+                    if dxl_comm_result != COMM_SUCCESS:
+                        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+                    elif dxl_error != 0:
+                        print("%s" % packetHandler.getRxPacketError(dxl_error))
+                    dxl_torque_mode, dxl_comm_result, dxl_error = packetHandler.read1ByteTxRx(portHandler, DXL_ID[i], ADDR_MX_TCME)
+
+                    if dxl_comm_result != COMM_SUCCESS:
+                        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+                    elif dxl_error != 0:
+                        print("%s" % packetHandler.getRxPacketError(dxl_error))
+
+                    print("[ID:%03d] Mode %03d" % (DXL_ID[i], dxl_torque_mode))
+                count = count + 1
+
+            elif count/r == 5.0:
+                for i in DXL_ID:
+                    dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,DXL_ID[i], ADDR_MX_TCME, TORQUE_DISABLE)
+                    if dxl_comm_result != COMM_SUCCESS:
+                        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+                    elif dxl_error != 0:
+                        print("%s" % packetHandler.getRxPacketError(dxl_error))
+
+                    dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler,DXL_ID[i], ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+                    if dxl_comm_result != COMM_SUCCESS:
+                        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+                    elif dxl_error != 0:
+                        print("%s" % packetHandler.getRxPacketError(dxl_error))
+                jn = 10
+                count = 0
+            else:
+                count = count + 1
+
+
         rate.sleep()
-    rospy.spin()
+    # rospy.spin()
 
 # def changemode():
 #     rospy.Subscriber('command',modechange,callback)
